@@ -1,43 +1,72 @@
-import java.io.*;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
+import java.util.Random;
 
 public class Main {
     public static void main(String[] args) {
-        start();
+        int[] numbers = BinomialHeap.generateRandomArray(10000);
+        BinomialHeap heap = new BinomialHeap();
+        List<Long> insertTimes = new ArrayList<>();
+        List<Integer> insertOperations = new ArrayList<>();
 
-    }
-
-    public static void start(){
-        CFile cFile = new CFile();
-        cFile.FFile();
-
-        try(Scanner scanner = new Scanner(new File("file.txt"))){
-            List<Integer> allNum = new ArrayList<>();
-            while (scanner.hasNextInt()) {
-                allNum.add(scanner.nextInt());
-            }
-            int currentIndex = 0;
-            for(int i = 0; i < 60; i++){
-                int size = cFile.getList()[i];
-                int[] num = new int[size];
-                for (int j = 0; j < size && currentIndex < allNum.size(); j++) {
-                    num[j] = allNum.get(currentIndex);
-                    currentIndex++;
-                }
-                long t1 = System.nanoTime();
-                HeapSort.heapSort(num);
-                long t2 = System.nanoTime();
-
-                System.out.println("Количество элементов: " + size + " время: " + (t2 - t1) +" число итераций: " +  HeapSort.getIterations());
-                HeapSort.zeroIterations();
-            }
-
+        for (int num : numbers) {
+            long startTime = System.nanoTime();
+            heap.insert(num);
+            long endTime = System.nanoTime();
+            insertTimes.add(endTime - startTime);
+            insertOperations.add((int) (Math.log(heap.size()) / Math.log(2)) + 1);
         }
-        catch (FileNotFoundException e) {
-            System.out.println("Файл не найден: " + e.getMessage());
+
+
+        Random random = new Random();
+        List<Long> searchTimes = new ArrayList<>();
+        List<Integer> searchOperations = new ArrayList<>();
+
+        for (int i = 0; i < 100; i++) {
+            int index = random.nextInt(numbers.length);
+            int target = numbers[index];
+
+            long startTime = System.nanoTime();
+            Integer found = heap.find(target);
+            long endTime = System.nanoTime();
+
+            searchTimes.add(endTime - startTime);
+            searchOperations.add((int) (Math.log(heap.size()) / Math.log(2)) + 1);
         }
+
+        List<Long> deleteTimes = new ArrayList<>();
+        List<Integer> deleteOperations = new ArrayList<>();
+
+        for (int i = 0; i < 1000; i++) {
+            int index = random.nextInt(numbers.length);
+            int target = numbers[index];
+
+            long startTime = System.nanoTime();
+            boolean deleted = heap.delete(target);
+            long endTime = System.nanoTime();
+
+            if (deleted) {
+                deleteTimes.add(endTime - startTime);
+                deleteOperations.add((int) (Math.log(heap.size()) / Math.log(2)) + 1);
+            }
+        }
+
+        double avgInsertTime = insertTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+        double avgInsertOps = insertOperations.stream().mapToInt(Integer::intValue).average().orElse(0);
+
+        double avgSearchTime = searchTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+        double avgSearchOps = searchOperations.stream().mapToInt(Integer::intValue).average().orElse(0);
+
+        double avgDeleteTime = deleteTimes.stream().mapToLong(Long::longValue).average().orElse(0);
+        double avgDeleteOps = deleteOperations.stream().mapToInt(Integer::intValue).average().orElse(0);
+
+        System.out.println("Среднее время вставки (нс): " + avgInsertTime);
+        System.out.println("Среднее количество операций вставки: " + avgInsertOps);
+
+        System.out.println("Среднее время поиска (нс): " + avgSearchTime);
+        System.out.println("Среднее количество операций поиска: " + avgSearchOps);
+
+        System.out.println("Среднее время удаления (нс): " + avgDeleteTime);
+        System.out.println("Среднее количество операций удаления: " + avgDeleteOps);
     }
 }
